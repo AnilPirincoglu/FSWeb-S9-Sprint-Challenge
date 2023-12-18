@@ -1,78 +1,116 @@
-import React from 'react'
+import axios from 'axios';
+import React, { useState } from 'react'
 
-// önerilen başlangıç stateleri
-const initialMessage = ''
 const initialEmail = ''
-const initialSteps = 0
-const initialIndex = 4 //  "B" nin bulunduğu indexi
 
 export default function AppFunctional(props) {
   // AŞAĞIDAKİ HELPERLAR SADECE ÖNERİDİR.
   // Bunları silip kendi mantığınızla sıfırdan geliştirebilirsiniz.
+  const [index, setIndex] = useState(4);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [steps, setSteps] = useState(0);
+  const [email, setEmail] = useState("");
 
-  function getXY() {
-    // Koordinatları izlemek için bir state e sahip olmak gerekli değildir.
-    // Bunları hesaplayabilmek için "B" nin hangi indexte olduğunu bilmek yeterlidir.
+
+  function getXY(index) {
+    let x = (index % 3) + 1;
+    let y = Math.floor(index / 3) + 1;
+    return { x, y };
   }
 
   function getXYMesaj() {
-    // Kullanıcı için "Koordinatlar (2, 2)" mesajını izlemek için bir state'in olması gerekli değildir.
-    // Koordinatları almak için yukarıdaki "getXY" helperını ve ardından "getXYMesaj"ı kullanabilirsiniz.
-    // tamamen oluşturulmuş stringi döndürür.
+
+    const XY = getXY(index);
+    return `Koordinatlar (${[XY.x, XY.y]})`;
   }
 
   function reset() {
-    // Tüm stateleri başlangıç ​​değerlerine sıfırlamak için bu helperı kullanın.
+    setIndex(4);
+    setErrorMessage("");
+    setSteps(0);
+    setEmail(" ");
   }
 
-  function sonrakiIndex(yon) {
-    // Bu helper bir yön ("sol", "yukarı", vb.) alır ve "B" nin bir sonraki indeksinin ne olduğunu hesaplar.
-    // Gridin kenarına ulaşıldığında başka gidecek yer olmadığı için,
-    // şu anki indeksi değiştirmemeli.
+  function clickHandler(event) {
+
+    const XY = getXY(index);
+    setErrorMessage("");
+
+    if (event.target.id === "up") {
+      if (XY.y != 1) {
+        setIndex(index - 3);
+        setSteps(steps + 1);
+      } else
+        setErrorMessage("Yukarıya gidemezsiniz");
+    }
+
+    else if (event.target.id === "down") {
+      if (XY.y != 3) {
+        setIndex(index + 3);
+        setSteps(steps + 1);
+      } else
+        setErrorMessage("Aşağıya gidemezsiniz");
+    }
+
+    else if (event.target.id === "right") {
+      if (XY.x != 3) {
+        setIndex(index + 1);
+        setSteps(steps + 1);
+      } else
+        setErrorMessage("Sağa gidemezsiniz");
+    }
+
+    else if (event.target.id === "left") {
+      if (XY.x != 1) {
+        setIndex(index - 1);
+        setSteps(steps + 1);
+      } else
+        setErrorMessage("Sola gidemezsiniz");
+    }
   }
 
-  function ilerle(evt) {
-    // Bu event handler, "B" için yeni bir dizin elde etmek üzere yukarıdaki yardımcıyı kullanabilir,
-    // ve buna göre state i değiştirir.
-  }
-
-  function onChange(evt) {
-    // inputun değerini güncellemek için bunu kullanabilirsiniz
-  }
-
-  function onSubmit(evt) {
-    // payloadu POST etmek için bir submit handlera da ihtiyacınız var.
+  function onSubmit(event) {
+    event.preventDefault();
+    const { x, y } = getXY(index);
+    axios.post("http://localhost:9000/api/result", { x, y, steps, email })
+      .then(res => {
+        setErrorMessage(res.data.message)
+        setEmail("");
+      })
+      .catch(err => {
+        setErrorMessage(err.response.data.message)
+      })
   }
 
   return (
     <div id="wrapper" className={props.className}>
       <div className="info">
-        <h3 id="coordinates">Koordinatlar (2, 2)</h3>
-        <h3 id="steps">0 kere ilerlediniz</h3>
+        <h3 id="coordinates">{getXYMesaj()}</h3>
+        <h3 id="steps">{steps} kere ilerlediniz</h3>
       </div>
       <div id="grid">
         {
           [0, 1, 2, 3, 4, 5, 6, 7, 8].map(idx => (
-            <div key={idx} className={`square${idx === 4 ? ' active' : ''}`}>
-              {idx === 4 ? 'B' : null}
+            <div key={idx} className={`square${idx === index ? ' active' : ''}`}>
+              {idx === index ? 'B' : null}
             </div>
           ))
         }
       </div>
       <div className="info">
-        <h3 id="message"></h3>
+        <h3 id="message">{errorMessage}</h3>
       </div>
       <div id="keypad">
-        <button id="left">SOL</button>
-        <button id="up">YUKARI</button>
-        <button id="right">SAĞ</button>
-        <button id="down">AŞAĞI</button>
-        <button id="reset">reset</button>
+        <button onClick={clickHandler} id="left">SOL</button>
+        <button onClick={clickHandler} id="up">YUKARI</button>
+        <button onClick={clickHandler} id="right">SAĞ</button>
+        <button onClick={clickHandler} id="down">AŞAĞI</button>
+        <button onClick={reset} id="reset">reset</button>
       </div>
-      <form>
-        <input id="email" type="email" placeholder="email girin"></input>
+      <form onSubmit={onSubmit}>
+        <input id="email" type="email" placeholder="email girin" onChange={(e) => setEmail(e.target.value)} value={email}></input>
         <input id="submit" type="submit"></input>
       </form>
-    </div>
+    </div >
   )
 }
