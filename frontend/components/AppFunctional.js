@@ -101,10 +101,10 @@ export default function AppFunctional(props) {
         <h3 id="message">{errorMessage}</h3>
       </div>
       <div id="keypad">
-        <button onClick={clickHandler} id="left">SOL</button>
-        <button onClick={clickHandler} id="up">YUKARI</button>
-        <button onClick={clickHandler} id="right">SAĞ</button>
-        <button onClick={clickHandler} id="down">AŞAĞI</button>
+        <button data-testid="leftButton" onClick={clickHandler} id="left">SOL</button>
+        <button data-testid="upButton" onClick={clickHandler} id="up">YUKARI</button>
+        <button data-testid="rightButton" onClick={clickHandler} id="right">SAĞ</button>
+        <button data-testid="downButton" onClick={clickHandler} id="down">AŞAĞI</button>
         <button onClick={reset} id="reset">reset</button>
       </div>
       <form onSubmit={onSubmit}>
